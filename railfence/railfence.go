@@ -17,7 +17,7 @@ func Encode(offset int, s string) string {
 			buffer.WriteString(string(s[j]))
 			pair_of_j := j + (jump - 2*level)
 			if pair_of_j < len(s) && pair_of_j != j && pair_of_j < j+jump {
-				buffer.WriteString(string(s[j]))
+				buffer.WriteString(string(s[pair_of_j]))
 			}
 		}
 	}
