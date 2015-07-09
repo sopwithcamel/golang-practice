@@ -1,6 +1,9 @@
 package railfence
 
-import "bytes"
+import (
+    "bytes"
+    "sort"
+)
 
 func max(l, r int) int {
 	if r > l {
@@ -9,61 +12,58 @@ func max(l, r int) int {
 	return l
 }
 
-func Encode(offset int, s string) string {
-	var buffer bytes.Buffer
-	jump := 2 * (offset - 1)
-	for level := 0; level < offset; level++ {
-		for j := level; j < len(s); j += jump {
-			buffer.WriteString(string(s[j]))
-			pair_of_j := j + (jump - 2*level)
-			if pair_of_j < len(s) && pair_of_j != j && pair_of_j < j+jump {
-				buffer.WriteString(string(s[pair_of_j]))
-			}
-		}
-	}
-	return buffer.String()
+func rail(rail_size, length int) []int {
+    pattern := make([]int, length)
+    dir := 1
+    pattern[0] = 0
+    for i := 1; i < length; i++ {
+        pattern[i] = pattern[i - 1] + dir
+        if pattern[i] == 0 || pattern[i] == rail_size - 1 {
+            dir = dir * -1
+        }
+    }
+    return pattern
 }
 
-func tailContribution(offset, level, tail int) int {
-	ret := 0
-	if tail > level {
-		ret++
-	}
-	if level > 0 && level < offset-1 {
-		if 2*offset-1-level >= tail {
-			ret++
-		}
-	}
-	return ret
+type Tuple struct {
+    ind int
+    char string
+}
+
+type ByIndex []Tuple
+
+func (a ByIndex) Len() int { return len(a) }
+func (a ByIndex) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByIndex) Less(i, j int) bool { return a[i].ind < a[j].ind }
+
+func zipSortUnzip(s string, order []int) string {
+    tuples := make([]Tuple, len(s))
+    for i, el := range order {
+        tuples[i].ind = el
+        tuples[i].char = string(s[i])
+    }
+    sort.Stable(ByIndex(tuples))
+    var buffer bytes.Buffer
+    for _, e := range tuples {
+        buffer.WriteString(e.char)
+    }
+    return buffer.String()
+}
+
+func Encode(offset int, s string) string {
+    pattern := rail(offset, len(s))
+    return zipSortUnzip(s, pattern)
 }
 
 func Decode(offset int, s string) string {
-	jump := 2 * (offset - 1)
-	num_vs := int(len(s) / jump)
-	tail := len(s) - jump*num_vs
-	level_ctr := make([]int, offset)
-	for level := 0; level < offset; level++ {
-		if level_ctr[level] = num_vs; level > 0 && level < offset-1 {
-			level_ctr[level] *= 2
-		}
-		// Deal with the tail.
-		level_ctr[level] += tailContribution(offset, level, tail)
-	}
-	deciphered := make([]byte, len(s))
-	ctr := 0
-	for level := 0; level < offset; level++ {
-		for let := 0; let < level_ctr[level]; let++ {
-			pos := level + jump*let
-			if pos < len(s) {
-				deciphered[pos] = s[ctr]
-				ctr++
-			}
-			pair := pos + (jump - level*2)
-			if pair > pos && pair < pos+jump && pair < len(s) {
-				deciphered[pair] = s[ctr]
-				ctr++
-			}
-		}
-	}
-	return string(deciphered)
+    var rail_str string
+    for i := 0; i < len(s); i++ {
+        rail_str += string(i)
+    }
+    enc_rail_str := Encode(offset, rail_str)
+    enc_rail := make([]int, len(s))
+    for i := 0; i < len(enc_rail); i++ {
+        enc_rail[i] = int(enc_rail_str[i])
+    }
+    return zipSortUnzip(s, enc_rail)
 }
