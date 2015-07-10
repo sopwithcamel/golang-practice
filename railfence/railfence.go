@@ -3,6 +3,7 @@ package railfence
 import (
 	"bytes"
 	"sort"
+    "unicode/utf8"
 )
 
 func rail(rail_size, length int) []int {
@@ -20,7 +21,7 @@ func rail(rail_size, length int) []int {
 
 type Tuple struct {
 	ind  int
-	char string
+	char rune
 }
 
 type ByIndex []Tuple
@@ -30,32 +31,36 @@ func (a ByIndex) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByIndex) Less(i, j int) bool { return a[i].ind < a[j].ind }
 
 func zipSortUnzip(s string, order []int) string {
-	tuples := make([]Tuple, len(s))
-	for i, el := range order {
-		tuples[i].ind = el
-		tuples[i].char = string(s[i])
+    s_len := utf8.RuneCountInString(s)
+	tuples := make([]Tuple, s_len)
+    index := 0
+	for _, el := range s {
+		tuples[index].ind = order[index]
+		tuples[index].char = el
+        index++
 	}
 	sort.Stable(ByIndex(tuples))
 	var buffer bytes.Buffer
 	for _, e := range tuples {
-		buffer.WriteString(e.char)
+		buffer.WriteRune(e.char)
 	}
 	return buffer.String()
 }
 
 func Encode(offset int, s string) string {
-	pattern := rail(offset, len(s))
+	pattern := rail(offset, utf8.RuneCountInString(s))
 	return zipSortUnzip(s, pattern)
 }
 
 func Decode(offset int, s string) string {
+    s_len := utf8.RuneCountInString(s)
 	var rail_str string
-	for i := 0; i < len(s); i++ {
+	for i := 0; i < s_len; i++ {
 		rail_str += string(i)
 	}
 	enc_rail_str := Encode(offset, rail_str)
-	enc_rail := make([]int, len(s))
-	for i := 0; i < len(enc_rail); i++ {
+	enc_rail := make([]int, s_len)
+	for i := 0; i < s_len; i++ {
 		enc_rail[i] = int(enc_rail_str[i])
 	}
 	return zipSortUnzip(s, enc_rail)
