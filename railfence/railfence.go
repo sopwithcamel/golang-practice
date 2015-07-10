@@ -3,7 +3,7 @@ package railfence
 import (
 	"bytes"
 	"sort"
-    "unicode/utf8"
+	"unicode/utf8"
 )
 
 func rail(rail_size, length int) []int {
@@ -31,13 +31,13 @@ func (a ByIndex) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByIndex) Less(i, j int) bool { return a[i].ind < a[j].ind }
 
 func zipSortUnzip(s string, order []int) string {
-    s_len := utf8.RuneCountInString(s)
+	s_len := utf8.RuneCountInString(s)
 	tuples := make([]Tuple, s_len)
-    index := 0
+	index := 0
 	for _, el := range s {
 		tuples[index].ind = order[index]
 		tuples[index].char = el
-        index++
+		index++
 	}
 	sort.Stable(ByIndex(tuples))
 	var buffer bytes.Buffer
@@ -53,7 +53,7 @@ func Encode(offset int, s string) string {
 }
 
 func Decode(offset int, s string) string {
-    s_len := utf8.RuneCountInString(s)
+	s_len := utf8.RuneCountInString(s)
 	var rail_str string
 	for i := 0; i < s_len; i++ {
 		rail_str += string(i)
