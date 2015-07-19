@@ -1,1 +1,6 @@
 *.swp
+
+
+# Idea
+.idea
+golang-practice.iml
